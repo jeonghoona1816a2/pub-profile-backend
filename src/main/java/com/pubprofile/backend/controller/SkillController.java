@@ -2,6 +2,7 @@ package com.pubprofile.backend.controller;
 
 import com.pubprofile.backend.domain.Skill;
 import com.pubprofile.backend.repository.SkillRepository;
+import com.pubprofile.backend.service.SkillService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,14 +18,16 @@ public class SkillController {
     private static final Logger log = LoggerFactory.getLogger(SkillController.class);
 
     private final SkillRepository skillRepository;
+    private final SkillService skillService;
 
-    public SkillController(SkillRepository skillRepository) {
+    public SkillController(SkillRepository skillRepository, SkillService skillService) {
         this.skillRepository = skillRepository;
+        this.skillService = skillService;
     }
 
     @GetMapping
     public List<Skill> getSkills() {
-        return skillRepository.findAll();
+        return skillService.getSkills();
     }
 
     @PostMapping

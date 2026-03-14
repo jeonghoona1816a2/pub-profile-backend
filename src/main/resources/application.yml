@@ -1,9 +1,17 @@
 spring:
   datasource:
-    url: jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres?sslmode=require
+    url: jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres?sslmode=require&tcpKeepAlive=true&connectTimeout=10&socketTimeout=30
     username: postgres.mcraiplemngquqvzlpls
     password: a9511818a!!
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 10000
+      validation-timeout: 3000
+      idle-timeout: 30000
+      keepalive-time: 30000
+      max-lifetime: 55000
 
   jpa:
     hibernate:
