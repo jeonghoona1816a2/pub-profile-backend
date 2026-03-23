@@ -8,4 +8,6 @@ import java.util.List;
 public interface FabCapacityRepository extends JpaRepository<FabCapacity, Long> {
 
     List<FabCapacity> findAllByOrderByYearDescIdDesc();
+
+    List<FabCapacity> findAllByFamilyIgnoreCaseOrderByYearDescIdDesc(String family);
 }

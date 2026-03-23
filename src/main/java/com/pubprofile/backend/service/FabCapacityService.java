@@ -4,6 +4,7 @@ import com.pubprofile.backend.domain.FabCapacity;
 import com.pubprofile.backend.repository.FabCapacityRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -22,10 +23,19 @@ public class FabCapacityService {
         this.databaseReadExecutor = databaseReadExecutor;
     }
 
-    public List<FabCapacity> getFabCapacities() {
+    public List<FabCapacity> getFabCapacities(String family) {
+        String normalizedFamily = family == null ? null : family.trim();
+
+        if (!StringUtils.hasText(normalizedFamily) || "all".equalsIgnoreCase(normalizedFamily)) {
+            return databaseReadExecutor.execute(
+                    "getFabCapacities",
+                    fabCapacityRepository::findAllByOrderByYearDescIdDesc
+            );
+        }
+
         return databaseReadExecutor.execute(
-                "getFabCapacities",
-                fabCapacityRepository::findAllByOrderByYearDescIdDesc
+                "getFabCapacitiesByFamily",
+                () -> fabCapacityRepository.findAllByFamilyIgnoreCaseOrderByYearDescIdDesc(normalizedFamily)
         );
     }
 
