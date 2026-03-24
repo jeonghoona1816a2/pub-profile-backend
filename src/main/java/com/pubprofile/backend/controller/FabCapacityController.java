@@ -40,8 +40,13 @@ public class FabCapacityController {
     }
 
     @GetMapping
-    public List<FabCapacity> getFabCapacities(@RequestParam(required = false) String family) {
-        return fabCapacityService.getFabCapacities(family);
+    public List<FabCapacity> getFabCapacities(
+            @RequestParam(required = false) String family,
+            @RequestParam(required = false) String site,
+            @RequestParam(required = false) String device,
+            @RequestParam(required = false) String category
+    ) {
+        return fabCapacityService.getFabCapacities(family, site, device, category);
     }
 
     @GetMapping("/{id}")

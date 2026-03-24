@@ -2,12 +2,15 @@ package com.pubprofile.backend.service;
 
 import com.pubprofile.backend.domain.FabCapacity;
 import com.pubprofile.backend.repository.FabCapacityRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class FabCapacityService {
@@ -23,10 +26,16 @@ public class FabCapacityService {
         this.databaseReadExecutor = databaseReadExecutor;
     }
 
-    public List<FabCapacity> getFabCapacities(String family) {
-        String normalizedFamily = family == null ? null : family.trim();
+    public List<FabCapacity> getFabCapacities(String family, String site, String device, String category) {
+        String normalizedFamily = normalizeFilter(family);
+        String normalizedSite = normalizeFilter(site);
+        String normalizedDevice = normalizeFilter(device);
+        String normalizedCategory = normalizeFilter(category);
 
-        if (!StringUtils.hasText(normalizedFamily) || "all".equalsIgnoreCase(normalizedFamily)) {
+        if (normalizedFamily == null
+                && normalizedSite == null
+                && normalizedDevice == null
+                && normalizedCategory == null) {
             return databaseReadExecutor.execute(
                     "getFabCapacities",
                     fabCapacityRepository::findAllByOrderByYearDescIdDesc
@@ -34,8 +43,37 @@ public class FabCapacityService {
         }
 
         return databaseReadExecutor.execute(
-                "getFabCapacitiesByFamily",
-                () -> fabCapacityRepository.findAllByFamilyIgnoreCaseOrderByYearDescIdDesc(normalizedFamily)
+                "getFabCapacitiesByFilters",
+                () -> fabCapacityRepository.findAll((root, query, criteriaBuilder) -> {
+                    List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+
+                    if (normalizedFamily != null) {
+                        predicates.add(criteriaBuilder.equal(
+                                criteriaBuilder.lower(root.get("family")),
+                                normalizedFamily.toLowerCase(Locale.ROOT)
+                        ));
+                    }
+                    if (normalizedSite != null) {
+                        predicates.add(criteriaBuilder.equal(
+                                criteriaBuilder.lower(root.get("site")),
+                                normalizedSite.toLowerCase(Locale.ROOT)
+                        ));
+                    }
+                    if (normalizedDevice != null) {
+                        predicates.add(criteriaBuilder.equal(
+                                criteriaBuilder.lower(root.get("device")),
+                                normalizedDevice.toLowerCase(Locale.ROOT)
+                        ));
+                    }
+                    if (normalizedCategory != null) {
+                        predicates.add(criteriaBuilder.equal(
+                                criteriaBuilder.lower(root.get("planGbnCd")),
+                                normalizedCategory.toLowerCase(Locale.ROOT)
+                        ));
+                    }
+
+                    return criteriaBuilder.and(predicates.toArray(jakarta.persistence.criteria.Predicate[]::new));
+                }, Sort.by(Sort.Direction.DESC, "year", "id"))
         );
     }
 
@@ -122,5 +160,14 @@ public class FabCapacityService {
 
     private ResponseStatusException notFound(Long id) {
         return new ResponseStatusException(HttpStatus.NOT_FOUND, "fab_capacity not found: " + id);
+    }
+
+    private String normalizeFilter(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+
+        String normalized = value.trim();
+        return "all".equalsIgnoreCase(normalized) ? null : normalized;
     }
 }
